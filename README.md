@@ -1,4 +1,4 @@
-# Short-Intense-Movements RAG Assistant 
+# Short-Intense-Movements RAG Assistant
 
 > A high-performance, domain-specific Retrieval-Augmented Generation (RAG) backend and REST API built with **FastAPI**, **LangChain**, **Google Gemini**, and **ChromaDB**.
 
@@ -21,10 +21,11 @@ This project implements an end-to-end RAG system specialized in **exercise physi
 ## Key Features
 
 - **Strict Anti-Hallucination Grounding:** Custom prompt design enforcing zero-extrapolation constraints — the assistant answers strictly using the verified retrieved context or explicitly states uncertainty.
+- **Source Document Attribution & Citations:** Every response includes the retrieved source passages alongside the answer for full auditability and transparency.
+- **Pre-warmed Vector Store & Singleton Chain:** Avoids re-embedding on every query by initializing the Chroma vector store and LCEL chain on startup.
+- **Type-Safe Pydantic Schemas:** Fully validated request/response bodies with interactive OpenAPI/Swagger documentation.
 - **Optimized Text Chunking:** Employs `RecursiveCharacterTextSplitter` tuned for medical/scientific abstracts to preserve semantic continuity across paragraph boundaries.
-- **Vector Search with ChromaDB:** Seamless integration with `gemini-embedding-2-preview` to perform fast top-$k$ similarity searches.
-- **LangChain Expression Language (LCEL):** Clean, modular, and declarative pipeline with `RunnablePassthrough` and `StrOutputParser`.
-- **FastAPI Backend:** Lightweight REST endpoints ready for client integrations or web/mobile frontends.
+- **FastAPI Backend:** High-performance asynchronous REST endpoints ready for client integrations or web/mobile frontends.
 
 ---
 
@@ -32,19 +33,19 @@ This project implements an end-to-end RAG system specialized in **exercise physi
 
 ```mermaid
 flowchart LR
-    A[User / Client] -->|GET /?input=...| B[FastAPI Router]
-    B --> C[LangChain RAG Chain]
+    A[Client Query / POST] --> B[FastAPI /api/v1/query]
+    B --> C[Singleton RAG Chain]
     C -->|Embed Query| D[Google Gemini Embeddings]
     D -->|Similarity Search| E[(ChromaDB Vector Store)]
-    E -->|Relevant Passages| C
+    E -->|Top-k Source Chunks| C
     C -->|Context + Question| F[Google Gemini 3.5 Flash-Lite]
-    F -->|Verified Answer| B
-    B -->|JSON Response| A
+    F -->|Grounded Answer + Citations| B
+    B -->|Pydantic JSON Response| A
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Prerequisites
 - Python 3.10+
@@ -69,7 +70,7 @@ flowchart LR
 
 3. **Install dependencies:**
    ```bash
-   pip install fastapi uvicorn python-dotenv langchain langchain-google-genai langchain-chroma langchain-text-splitters chromadb
+   pip install -r requirements.txt
    ```
 
 4. **Set up environment variables:**
@@ -96,28 +97,40 @@ FastAPI automatically provides interactive Swagger docs:
 - **Swagger UI:** `http://127.0.0.1:8000/docs`
 - **ReDoc:** `http://127.0.0.1:8000/redoc`
 
-### Example Request
+### Example Request (`POST /api/v1/query`)
 ```bash
-curl -X GET "http://127.0.0.1:8000/?input=What%20did%20the%20Cell%20Reports%20Medicine%20study%20find%20about%20plasma%20proteins?"
+curl -X POST "http://127.0.0.1:8000/api/v1/query" \
+     -H "Content-Type: application/json" \
+     -d '{"query": "What did the Cell Reports Medicine study find about plasma proteins?"}'
 ```
 
 ### Example Response
 ```json
 {
-  "message": "The Cell Reports Medicine study found that among 2,884 plasma proteins measured, the high-intensity group showed increases in 714 proteins related to growth hormones, vascular function, tissue remodeling, and fat metabolism, compared to only 7 in the moderate-intensity group."
+  "query": "What did the Cell Reports Medicine study find about plasma proteins?",
+  "answer": "The Cell Reports Medicine study found that among 2,884 plasma proteins measured, the high-intensity group showed increases in 714 proteins related to growth hormones, vascular function, tissue remodeling, and fat metabolism, compared to only 7 proteins in the moderate-intensity group.",
+  "sources": [
+    {
+      "content": "A study recently published in the international journal *Cell Reports Medicine* explained the reason at the molecular level. Researchers divided 19 young, healthy men into two groups..."
+    },
+    {
+      "content": "Among 2,884 plasma proteins measured, the high-intensity group showed increases in 714 proteins. These included growth hormones and substances related to vascular function..."
+    }
+  ]
 }
 ```
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 ├── app/
-│   ├── domain.py      # LangChain RAG pipeline & vector store configuration
-│   ├── routes.py      # FastAPI route definitions
-│   └── utils.py       # Document loaders, knowledge base & formatting helpers
-├── main.py            # Application entrypoint & FastAPI initialization
+│   ├── domain.py      # LangChain RAG pipeline, Chroma vector store & singleton chain
+│   ├── routes.py      # FastAPI route definitions (POST /api/v1/query)
+│   ├── schemas.py     # Pydantic request and response models
+│   └── utils.py       # Knowledge base documents and formatting helpers
+├── main.py            # FastAPI entrypoint with lifespan pre-warming
 ├── .env.example       # Example environment variables
 ├── requirements.txt   # Project dependencies
 └── README.md          # Project documentation
@@ -125,5 +138,5 @@ curl -X GET "http://127.0.0.1:8000/?input=What%20did%20the%20Cell%20Reports%20Me
 
 ---
 
-## 📜 License
+## License
 Distributed under the MIT License.
