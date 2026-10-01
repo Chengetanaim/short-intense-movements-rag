@@ -1,4 +1,4 @@
-# Short-Intense-Movements RAG API 🏃‍♂️⚡
+# Short-Intense-Movements RAG API 
 
 > A high-performance, domain-specific Retrieval-Augmented Generation (RAG) REST API built with **FastAPI**, **LangChain LCEL**, **Google Gemini**, and **ChromaDB**.
 
@@ -26,7 +26,7 @@ This backend powers an end-to-end RAG system specialized in **exercise physiolog
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -42,7 +42,7 @@ flowchart LR
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Prerequisites
 - Python 3.10+
@@ -85,7 +85,7 @@ API will be live at `http://127.0.0.1:8000`.
 
 ---
 
-## 📡 API Endpoints & Usage
+## API Endpoints & Usage
 
 ### Interactive Docs
 - **Swagger UI:** `http://127.0.0.1:8000/docs`
@@ -115,7 +115,7 @@ curl -X POST "http://127.0.0.1:8000/api/v1/query" \
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 ├── app/
@@ -131,6 +131,6 @@ curl -X POST "http://127.0.0.1:8000/api/v1/query" \
 
 ---
 
-## 📜 License
+## License
 
 Distributed under the MIT License.
